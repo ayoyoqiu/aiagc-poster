@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AIGC海报机器人实践交流</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" integrity="sha512-1ycn6IcaQQ40/MKBW2W4Rhis/DbILU74C1vSrLJxCq57o941Ym01SwNsOMqvEBFlcgUa6xLiPY/NS5R+E6ztJQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <style>
+        body {
+            font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f9f9f9;
+            color: #333;
+            line-height: 1.6;
+        }
+        .flex-container {
+            display: flex;
+            align-items: flex-start;
+            gap: 20px;
+            margin: 15px 0;
+        }
+        .text-content {
+            flex: 3;
+        }
+        .image-content {
+            flex: 2;
+            text-align: center;
+        }
+        
+        /* 里程碑式流程图 - 横向布局 */
+        .flow-chart {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: space-between;
+            margin: 25px auto;
+            max-width: 100%;
+            overflow-x: auto;
+            padding: 15px 5px;
+            position: relative;
+        }
+        .flow-chart::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(to right, #e0e0e0, #3498db, #e0e0e0);
+            z-index: 0;
+            transform: translateY(-50%);
+        }
+        .flow-step {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            z-index: 1;
+            flex: 1;
+            min-width: 90px;
+            transition: all 0.3s ease;
+        }
+        .flow-step:hover .flow-icon {
+            transform: scale(1.1);
+            box-shadow: 0 0 10px rgba(52, 152, 219, 0.4);
+        }
+        .flow-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 18px;
+            height: 18px;
+            background-color: #3498db;
+            color: white;
+            border-radius: 50%;
+            margin-bottom: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        .flow-icon::after {
+            content: '';
+            position: absolute;
+            width: 24px;
+            height: 24px;
+            border: 1px solid #3498db;
+            border-radius: 50%;
+            opacity: 0.4;
+        }
+        .flow-icon i {
+            font-size: 0.7em;
+        }
+        .flow-text {
+            font-size: 0.85em;
+            font-weight: 500;
+            text-align: center;
+            padding: 8px 4px;
+            background-color: white;
+            border-radius: 4px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            width: 100%;
+            margin-top: 8px;
+        }
+        .flow-arrow {
+            color: transparent;
+            margin: 0 -5px;
+            z-index: 0;
+            position: relative;
+        }
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 30px;
+        }
+        h2 {
+            color: #3498db;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 8px;
+            margin-top: 40px;
+        }
+        .collapsible {
+            background-color: #fff;
+            color: #444;
+            cursor: pointer;
+            padding: 18px;
+            width: 100%;
+            border: none;
+            text-align: left;
+            outline: none;
+            font-size: 18px;
+            font-weight: bold;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            margin-bottom: 10px;
+            transition: 0.3s;
+            position: relative;
+        }
+        .collapsible:after {
+            content: '\002B';
+            color: #777;
+            font-weight: bold;
+            float: right;
+            margin-left: 5px;
+        }
+        .active:after {
+            content: "\2212";
+        }
+        .collapsible:hover {
+            background-color: #f0f8ff;
+        }
+        .content {
+            padding: 0 18px;
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+            background-color: white;
+            border-radius: 0 0 8px 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        .content.expanded {
+            max-height: 1000px;
+            padding: 18px;
+        }
+        .img-placeholder {
+            background-color: #eee;
+            height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            margin: 10px 0;
+            color: #777;
+        }
+        ul {
+            padding-left: 20px;
+        }
+        li {
+            margin-bottom: 8px;
+        }
+        .highlight {
+            background-color: #ffeaa7;
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+        .workflow-link {
+            display: inline-block;
+            margin: 10px 0;
+            color: #3498db;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        .workflow-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div style="position: relative; margin-bottom: 30px;">
+        <h1>AIGC海报机器人实践交流</h1>
+        <div style="position: absolute; right: 0; bottom: -20px; font-size: 14px; color: #777;">
+            2025年5月29日 星期四    
+        </div>
+    </div>
+    
+    <button class="collapsible"><i class="fas fa-lightbulb" style="margin-right: 10px; color: #f39c12;"></i>想法创意</button>
+    <div class="content">
+        <p>早期一直有个萌芽，想拥有一个好看的新闻海报，而不是新闻摘要；</p>
+        <div class="flow-chart">
+            <div class="flow-step">
+                <div class="flow-icon"><i class="fas fa-search"></i></div>
+                <div class="flow-text">信息源获取</div>
+            </div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-step">
+                <div class="flow-icon"><i class="fas fa-heading"></i></div>
+                <div class="flow-text">标题提取</div>
+            </div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-step">
+                <div class="flow-icon"><i class="fas fa-file-alt"></i></div>
+                <div class="flow-text">内容总结</div>
+            </div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-step">
+                <div class="flow-icon"><i class="fas fa-palette"></i></div>
+                <div class="flow-text">海报模版设计</div>
+            </div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-step">
+                <div class="flow-icon"><i class="fas fa-paper-plane"></i></div>
+                <div class="flow-text">推送到企微</div>
+            </div>
+        </div>
+        <style>
+            .lightbox {
+                display: none;
+                position: fixed;
+                z-index: 1000;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background-color: rgba(0, 0, 0, 0.8);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+            .lightbox img {
+                max-width: 90%;
+                max-height: 90%;
+                object-fit: contain;
+            }
+            .lightbox.active {
+                display: flex;
+            }
+            .close-lightbox {
+                position: absolute;
+                top: 20px;
+                right: 20px;
+                color: white;
+                font-size: 30px;
+                cursor: pointer;
+            }
+            .zoomable {
+                cursor: pointer;
+                transition: transform 0.3s;
+            }
+            .zoomable:hover {
+                transform: scale(1.03);
+            }
+        </style>
+        
+        <div class="process-showcase" style="margin-top: 30px; background: linear-gradient(to bottom, #f8f9fa, #ffffff); padding: 20px; border-radius: 12px; border-top: 3px solid #3498db; position: relative; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
+            <h3 style="margin-top: 0; color: #3498db; font-size: 16px; margin-bottom: 15px;">流程实现效果</h3>
+            <div class="flex-container" style="align-items: center;">
+                <div class="image-content" style="flex: 1; text-align: center;">
+                    <img src="https://img520.com/CTUeNa.png" alt="工作流示例1" class="zoomable" onclick="openLightbox(this.src)" style="width: 90%; height: 200px; object-fit: contain;">
+                </div>
+                <div class="image-content" style="flex: 1; text-align: center;">
+                    <img src="https://img520.com/PZHSrZ.png" alt="工作流示例2" class="zoomable" onclick="openLightbox(this.src)" style="width: 90%; height: 200px; object-fit: contain;">
+                </div>
+            </div>
+        </div>
+        
+        <div id="lightbox" class="lightbox" style="display: none;" onclick="closeLightbox()">
+            <span class="close-lightbox">&times;</span>
+            <img id="lightbox-img" src="" alt="放大图片">
+        </div>
+    </div>
+    
+    <button class="collapsible"><i class="fas fa-cogs" style="margin-right: 10px; color: #3498db;"></i>实践过程</button>
+    <div class="content">
+        <p><strong>第一阶段：</strong>实现的是，信息爬取到新闻总结 也就是1～3的内容</p>
+        <p><strong>第二阶段：</strong>而后研究了海报图像流，实现了信息可以生成海报</p>
+        <p><strong>第三阶段：</strong>突破了通过企业微信推送文字消息，到图像消息</p>
+        <p>工作流链接地址：</p>
+        <a href="https://www.coze.cn/space/7506717123507404841/develop" class="workflow-link" target="_blank">
+            https://www.coze.cn/space/7506717123507404841/develop
+        </a>
+        
+        <div class="process-showcase" style="margin-top: 30px; background: linear-gradient(to bottom, #f8f9fa, #ffffff); padding: 20px; border-radius: 12px; border-top: 3px solid #3498db; position: relative; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
+            <h3 style="margin-top: 0; color: #3498db; font-size: 16px; margin-bottom: 15px;">工作流系统效果</h3>
+            <div class="img-container" style="text-align: center;">
+                <img src="https://img520.com/ECE2AE.png" alt="工作流示例" class="zoomable" onclick="openLightbox(this.src)" style="max-width: 90%; border-radius: 4px;">
+            </div>
+        </div>
+    </div>
+    
+    <button class="collapsible"><i class="fas fa-star" style="margin-right: 10px; color: #e74c3c;"></i>心得感悟</button>
+    <div class="content">
+        <div class="flex-container">
+            <div class="text-content">
+                <ol>
+                    <li>从初期的想法萌芽，到实践的过程需要推一把：布道师的资源支持和AI工具的便利（网页抓取插件、日期插件）</li>
+                    <li>遇事不决，已经习惯找AI，也要找布道师（丙飞支持实现企微消息推送图片）</li>
+                    <li>要允许自己先造一个<span class="highlight">垃圾出来</span>，不要想太多</li>
+                </ol>
+            </div>
+            <div class="image-content">
+                <img src="https://img520.com/iVO0bR.png" alt="海报示例" style="max-width: 60%; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var coll = document.getElementsByClassName("collapsible");
+            for (var i = 0; i < coll.length; i++) {
+                coll[i].addEventListener("click", function() {
+                    this.classList.toggle("active");
+                    var content = this.nextElementSibling;
+                    if (content.classList.contains('expanded')) {
+                        content.classList.remove('expanded');
+                    } else {
+                        content.classList.add('expanded');
+                    }
+                });
+            }
+        });
+        
+        // 图片放大功能
+        function openLightbox(imgSrc) {
+            document.getElementById('lightbox-img').src = imgSrc;
+            document.getElementById('lightbox').style.display = 'flex';
+            // 阻止事件冒泡
+            event.stopPropagation();
+        }
+        
+        function closeLightbox() {
+            document.getElementById('lightbox').style.display = 'none';
+        }
+        
+        // 定义这些函数在全局范围内
+        window.openLightbox = openLightbox;
+        window.closeLightbox = closeLightbox;
+    </script>
+    <div style="text-align: right; margin: 40px 0 20px; padding-top: 20px; border-top: 1px solid #eee; font-size: 14px; color: #3498db; font-weight: 500;">
+        集团AI布道师 yoyo
+    </div>
+</body>
+</html>
